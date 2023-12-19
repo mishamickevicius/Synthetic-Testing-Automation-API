@@ -1,0 +1,32 @@
+Issues to fix:
+    Figure out provider switching issue
+    Fix Sizing Issues
+
+Types of Data to find:
+    1. Find how long it takes to load a webpage
+    2. Get Screenshot of the page
+    3. Find fill sizes of requests and show them based on how big they are
+    4. Total file size of all data.
+    5. Find errors that come up in cosole when loading webpage
+    
+API Changes: 
+    1. Have support for .txt and .csv file input
+    
+
+Frontend Changes:
+    1. Use Next.js
+
+Firebase/Google Cloud Changes:
+    1. Do more with the database (ex. Saving previous scans and comparing results with past scans)
+    2. Compare past scans with more recent scans
+    3. Use Google APIS or other APIs 
+        - Google Sheets API In order to make reports
+        - Gmail API to send emails when 404s are found
+
+General Changes:
+    1. Find ways to collect data and to show important data
+    
+
+
+Other Things:
+    1. Find ways to implement ML
