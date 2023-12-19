@@ -2,12 +2,19 @@ Issues to fix:
     Figure out provider switching issue
     Fix Sizing Issues
 
+ML Ideas:
+    1. Smart Error Resolution: Train models to analyze console errors and suggest potential fixes or 
+    relevant debugging steps based on similar issues encountered in the past.
+    Possibly Implement text generation llm for this specific case 
+    2. Performance Optimization: Use ML algorithms to optimize website performance by suggesting changes in 
+    resource loading sequences, caching strategies, or resource compression based on historical performance data.
+
 Types of Data to find:
     1. Find how long it takes to load a webpage
     2. Get Screenshot of the page
     3. Find fill sizes of requests and show them based on how big they are
     4. Total file size of all data.
-    5. Find errors that come up in cosole when loading webpage
+    5. Find errors that come up in console when loading webpage
     
 API Changes: 
     1. Have support for .txt and .csv file input
@@ -25,8 +32,5 @@ Firebase/Google Cloud Changes:
 
 General Changes:
     1. Find ways to collect data and to show important data
+    2. Having reports but making them customizable by the user.
     
-
-
-Other Things:
-    1. Find ways to implement ML
