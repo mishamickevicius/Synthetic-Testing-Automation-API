@@ -19,6 +19,7 @@ Types of Data to find:
 API Changes: 
     1. Have Class Based View in order to add save space and time
     2. Have support for .txt and .csv file input
+    3. Add support for PostgreSQL. Figure it out
     
 
 Frontend Changes:
