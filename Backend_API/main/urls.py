@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import element_grab
+from .views import webpage_screenshot
 urlpatterns = [
-    path('element-grab', element_grab)
+    path('webpage-screenshot', webpage_screenshot)
 ]

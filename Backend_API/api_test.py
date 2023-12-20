@@ -1,6 +1,6 @@
 import requests as rq
 
-URL = "http://127.0.0.1:8000/api/element-grab"
+URL = "http://127.0.0.1:8000/api/webpage-screenshot"
 
 data = {
     "target_url": "https://website-status-checker-v1.web.app/"

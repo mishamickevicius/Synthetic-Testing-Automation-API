@@ -12,12 +12,13 @@ ML Ideas:
 Types of Data to find:
     1. Find how long it takes to load a webpage
     2. Get Screenshot of the page
-    3. Find fill sizes of requests and show them based on how big they are
+    3. Find file sizes of requests and show them based on how big they are
     4. Total file size of all data.
     5. Find errors that come up in console when loading webpage
     
 API Changes: 
-    1. Have support for .txt and .csv file input
+    1. Have Class Based View in order to add save space and time
+    2. Have support for .txt and .csv file input
     
 
 Frontend Changes:
