@@ -16,6 +16,10 @@ class TestGroupModel(models.Model):
         FileExtensionValidator(['txt', 'csv']), ]) # Only accepts txt and csv files
     user = models.ForeignKey(User, on_delete=models.CASCADE) # Link the user that owns this Test Group
 
+    def __str__(self) -> str:
+        return f"Name: {self.name}  User: {self.user}"
+    
+
 class TestResultModel(models.Model):
     """
     This is a model that will store data from ran tests.
@@ -34,4 +38,7 @@ class TestResultModel(models.Model):
         base_field=models.TextField(max_length=200, null=True, blank=True)
     )
     webpage_size = models.FloatField(null=True, blank=True) # The size of the webpage data in Mb
+    run_date = models.DateTimeField()
 
+    def __str__(self) -> str:
+        return f"URL: {self.website_url} User: {self.user}"
