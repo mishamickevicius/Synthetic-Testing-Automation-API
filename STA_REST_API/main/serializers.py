@@ -8,7 +8,7 @@ class TestGroupSerializer(serializers.ModelSerializer):
         model = TestGroupModel
         fields = [
             'name',
-            'file',
+            'file_data',
             'user'
         ]
 

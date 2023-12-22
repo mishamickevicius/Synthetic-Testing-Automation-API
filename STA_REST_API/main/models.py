@@ -12,8 +12,11 @@ class TestGroupModel(models.Model):
     This model will hold the .txt or .csv file that a user inputs
     """
     name = models.CharField(max_length=25) # Name of the TestGroup # * Needs to be unique for the user
-    file = models.FileField(validators=[
-        FileExtensionValidator(['txt', 'csv']), ]) # Only accepts txt and csv files
+    # file = models.FileField(validators=[
+    #     FileExtensionValidator(['txt', 'csv']), ]) # Only accepts txt and csv files
+    file_data = ArrayField(
+        base_field=models.TextField(max_length=200, null=True, blank=True)
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE) # Link the user that owns this Test Group
 
     def __str__(self) -> str:

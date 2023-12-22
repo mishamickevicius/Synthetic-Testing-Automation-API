@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
+import base64
 
 # Create your views here.
 class UserView(APIView):
@@ -79,6 +80,8 @@ class WebsiteTest(APIView):
     """
     A class that has all the functions to get the different types of 
     data needed and has functions for get and post to handle requests.
+    Getting Information about a scan(GET), Running a scan(POST), and
+    Deleting a past scan(DELETE)
     """
 
 
@@ -101,7 +104,7 @@ class TestGroupView(APIView):
     """
     API view that will handle requests related to the test groups set 
     by users. This will include getting info about a test group(GET), 
-    adding new groups(POST), deleting groups(DELETE), and changing groups(PUT/PATCH)
+    adding new groups(POST), deleting groups(DELETE), and changing groups(PATCH)
     """
     def get(self, request):
         try:
@@ -109,9 +112,7 @@ class TestGroupView(APIView):
             group_name = data['test_group_name'] if isinstance(data['test_group_name'], str) else data['test_group_name'][0] 
             user_id = data['user_id'] if isinstance(data['user_id'], str) else data['user_id'][0] 
             user = User.objects.get(username=user_id)
-            print(f"User: {user}, Group_Name: {group_name}")
             test_group = TestGroupModel.objects.filter(user=user, name=group_name).first() 
-            print(test_group)
             serializer = TestGroupSerializer(test_group)
             return Response(serializer.data)
         except Exception as err:
@@ -119,8 +120,26 @@ class TestGroupView(APIView):
             return Response({'error':'Error with request'},status=500)
     
     def post(self, request):
-        pass
+        try:
+            data = dict(request.data)
+            user_id = data['user_id'] if isinstance(data['user_id'], str) else data['user_id'][0] 
+            user = User.objects.get(username=user_id)
+            group_name = data['name'] if isinstance(data['name'], str) else data['name'][0] 
+            # Check if the name already is used
+            check = TestGroupModel.objects.filter(name=group_name, user=user).first()
+            if check is not None:
+                return Response({"Status": "Name already taken"}, status=400)
+            else:
+                file = data['file'] if isinstance(data['file'], str) else data['file'][0] 
+                decoded_file = base64.b64decode(file).decode("utf-8").split("\n")
+                # Create a new instance of the model and save it in the database
+                new_group = TestGroupModel(name=group_name, user=user, file_data=decoded_file)
+                new_group.save()
+                return Response(status=204)
 
+        except Exception as err:
+            print(err)
+            return Response({'error': 'Error with request'}, status=500)
     def delete(self, request):
         try:
             data = dict(request.data)
@@ -134,8 +153,29 @@ class TestGroupView(APIView):
             print(err)
             return Response({'error': 'Error with request'}, status=500)
 
-    def put(self, request):
-        pass
-
     def patch(self, request):
-        pass
+        try:
+            data = dict(request.data)
+            user_id = data["user_id"] if isinstance(data['user_id'], str) else data['user_id'][0] 
+            user = User.objects.get(username=user_id)
+            group_name = data['name'] if isinstance(data['name'], str) else data['name'][0] 
+            # The request will have a target which should be either name or file.
+            target = data['target'] if isinstance(data['target'], str) else data['target'][0] 
+            # The request will also have a value which the selected field will be changed to
+            change_value = data['change_value'] if isinstance(data['change_value'], str) else data['change_value'][0] 
+            test_group = TestGroupModel.objects.get(user=user, name=group_name)
+            if target == 'name':
+                test_group.name = change_value
+                test_group.save()
+                return Response(status=204)
+            elif target == 'file':
+                file = data['change_value'] if isinstance(data['change_value'], str) else data['change_value'][0] 
+                decoded_file = base64.b64decode(file).decode("utf-8").split("\n")
+                test_group.file_data = decoded_file
+                test_group.save()
+                return Response(status=204)
+
+
+        except Exception as err:
+            print(err)
+            return Response({'error':'User ID missing or invalid.'}, status=400)
