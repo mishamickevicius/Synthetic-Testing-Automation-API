@@ -3,10 +3,10 @@ import base64
 
 # Get Test
 
-URL = "http://127.0.0.1:8000/api/test-group-view"
+URL = "http://127.0.0.1:8000/api/main-website-test"
 
 data = {
-    "user_id": "testUser1",
+    "user_id": "testUser2",
     "test_group_name":"Test Group 2"
 }
 
@@ -16,13 +16,14 @@ print(response.json())
 
 # Delete Test
 
-# data = {
-#     'user_id': 'testUser1',
-#     'test_group_name':"API Test Group 2"
-# }
+data = {
+    'user_id': 'testUser2',
+    'test_group_name':"API Test Group 2",
+    'test_id': '3'
+}
 
-# response = rq.delete(URL, data=data)
-# print(response.status_code)
+response = rq.delete(URL, data=data)
+print(response.status_code)
 
 # Post Test
 
@@ -39,15 +40,15 @@ print(response.json())
 
 # Patch Test
 
-data = {
-    "user_id":"testUser1",
-    "name":"Test Group 1",
-    'target': 'file'
-}
+# data = {
+#     "user_id":"testUser1",
+#     "name":"Test Group 1",
+#     'target': 'file'
+# }
 
-with open("/home/dude/Desktop/Projects/CyberSecurity Project/Synthetic-Testing-Automation/url_test_list_3.txt", 'rb') as file:
-    file_content = file.read()  # Read the file content as bytes
-    data["change_value"] = base64.b64encode(file_content).decode('utf-8')
+# with open("/home/dude/Desktop/Projects/CyberSecurity Project/Synthetic-Testing-Automation/url_test_list_3.txt", 'rb') as file:
+#     file_content = file.read()  # Read the file content as bytes
+#     data["change_value"] = base64.b64encode(file_content).decode('utf-8')
 
-response = rq.patch(URL, data=data)
-print("Patch Response Code : ", response.status_code)
+# response = rq.patch(URL, data=data)
+# print("Patch Response Code : ", response.status_code)

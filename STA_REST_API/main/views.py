@@ -78,26 +78,62 @@ class UserView(APIView):
 
 class WebsiteTest(APIView):
     """
-    A class that has all the functions to get the different types of 
+    API view that has all the functions to get the different types of 
     data needed and has functions for get and post to handle requests.
-    Getting Information about a scan(GET), Running a scan(POST), and
+    Getting Information about a past scan(GET), Running a scan(POST), and
     Deleting a past scan(DELETE)
     """
+
+    def get(self, request):
+        try:
+            data = dict(request.data)
+            user_id = data['user_id'] if isinstance(data['user_id'], str) else data['user_id'][0] 
+            user = User.objects.get(username=user_id)
+            test_group_name = data['test_group_name'] if isinstance(data['test_group_name'], str) else data['test_group_name'][0] 
+            test_group = TestGroupModel.objects.filter(name=test_group_name, user=user).first()
+            if test_group is None:
+                return Response({'error': f'No test group with name {test_group_name}'}, status=400)
+            else:
+                ran_tests = []
+                tests = list(TestResultModel.objects.filter(test_group=test_group, user=user))
+                if len(tests) > 0:
+                    for t in tests:
+                        ran_tests.append(t)
+                else:
+                    return Response({'status': f'No Ran Tests'}, status=200)
+                d = {"user_id":user.username, "ran_tests":[]}
+                for t in ran_tests: # Loop through all tests and serialize data and add to output_data
+                    data = TestResultSerializer(t).data
+                    data['user'] = user_id
+                    d["ran_tests"].append(data)
+                return Response(d, status=200)
+                
+        except Exception as err:
+            print(err)
+            return Response({'error':'Error with request'},status=500)
+    
+
+    def delete(self, request):
+        # ! Be Careful with ID for frontend on this endpoint
+        try:
+            data = dict(request.data)
+            test_id = int(data['test_id']) if isinstance(data['test_id'], str) else int(data['test_id'][0] )
+            test = TestResultModel.objects.get(id=test_id)
+            test.delete()
+            return Response(status=204)
+        except Exception as err:
+            print(err)
+            return Response({'error':'Error with request'},status=500)
 
 
     def website_scan(self, target):
         # This will be the function that will do the scan and the other 
         # Functions will call this one
         pass
-
-    def get(self, request):
-        pass
-    
     def post(self, request):
+        # Run The Test function according to inputs 
         pass
 
-    def delete(self, request):
-        pass
 
 
 class TestGroupView(APIView):

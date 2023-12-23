@@ -9,7 +9,8 @@ class TestGroupSerializer(serializers.ModelSerializer):
         fields = [
             'name',
             'file_data',
-            'user'
+            'user',
+            'id'
         ]
 
 class TestResultSerializer(serializers.ModelSerializer):
@@ -22,5 +23,6 @@ class TestResultSerializer(serializers.ModelSerializer):
             'run_time',
             'errors',
             'webpage_size',
-            'run_date'
+            'run_date',
+            'id'
         ]
