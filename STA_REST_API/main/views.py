@@ -10,6 +10,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 import base64
+import time
 
 # Create your views here.
 class UserView(APIView):
@@ -115,6 +116,7 @@ class WebsiteTest(APIView):
 
     def delete(self, request):
         # ! Be Careful with ID for frontend on this endpoint
+        # ! Id is not user based 
         try:
             data = dict(request.data)
             test_id = int(data['test_id']) if isinstance(data['test_id'], str) else int(data['test_id'][0] )
@@ -126,13 +128,53 @@ class WebsiteTest(APIView):
             return Response({'error':'Error with request'},status=500)
 
 
-    def website_scan(self, target):
-        # This will be the function that will do the scan and the other 
-        # Functions will call this one
-        pass
+    def website_test(self, target):
+        # * Return the results as a json object
+        try:
+            driver = webdriver.Chrome()
+            start_time = time.time()
+            driver.get(target)
+            end_time = time.time()
+            time.sleep(3)
+            errors = driver.execute_script("return window.console.error")
+            errors_list = []
+            if errors:
+                print("Console errors found:")
+                for error in errors:
+                    print(error)
+                    errors_list.append(str(error))
+            else:
+                print("No errors found")
+            time.sleep(2)
+            driver.close()
+            print(f"Load Time ----> {end_time - start_time}")
+            return round(end_time - start_time, 2)
+        except Exception as err:
+            print(err)
+            return None
+
     def post(self, request):
         # Run The Test function according to inputs 
-        pass
+        try:
+            data = dict(request.data)
+            user_id = data['user_id'] if isinstance(data['user_id'], str) else data['user_id'][0] 
+            user = User.objects.get(username=user_id)
+            test_type = data['test_type'] if isinstance(data['test_type'], str) else data['test_type'][0] 
+            if test_type == 'group':
+                group_name = data['group_name']
+                group = TestGroupModel.objects.filter(name=group_name, user=user).first()
+                if group is None:
+                    return Response({'error': f'No test group with name {group_name}'}, status=400)  
+                ## !!! This is where we loop through URLS and run test function through threads
+            elif test_type == 'single':
+                target_url = data['target_url'] if isinstance(data['target_url'], str) else data['target_url'][0] 
+                test_results = self.website_test(target=target_url)
+                if test_results is None:
+                    return Response({'error': "Invalid Url"}, status=400)
+                return Response({"load_time": test_results}, status=200)
+        except Exception as err:
+            print(err)
+            return Response({'error':'Error with request'},status=500)
 
 
 

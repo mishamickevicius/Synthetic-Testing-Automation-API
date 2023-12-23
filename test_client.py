@@ -14,29 +14,31 @@ response = rq.get(URL, data=data)
 
 print(response.json())
 
-# Delete Test
+# # Delete Test
 
-data = {
-    'user_id': 'testUser2',
-    'test_group_name':"API Test Group 2",
-    'test_id': '3'
-}
+# data = {
+#     'user_id': 'testUser2',
+#     'test_group_name':"API Test Group 2",
+#     'test_id': '3'
+# }
 
-response = rq.delete(URL, data=data)
-print(response.status_code)
+# response = rq.delete(URL, data=data)
+# print(response.status_code)
 
 # Post Test
 
-# data = {
-#     "user_id":"testUser1",
-#     "name":"Test Group 1"
-# }
+data = {
+    "user_id":"testUser1",
+    "test_type":"single",
+    "target_url":"https://youtube.com"
+}
 # with open("/home/dude/Desktop/Projects/CyberSecurity Project/Synthetic-Testing-Automation/url_test_list.txt", 'rb') as file:
 #     file_content = file.read()  # Read the file content as bytes
 #     data["file"] = base64.b64encode(file_content).decode('utf-8')
 
-# response = rq.post(URL, data=data)
-# print("Post Response Code : ", response.status_code)
+response = rq.post(URL, data=data)
+print("Post data: ", response.json())
+print("Post Response Code : ", response.status_code)
 
 # Patch Test
 
