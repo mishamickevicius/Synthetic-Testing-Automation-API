@@ -158,11 +158,17 @@ class WebsiteTest(APIView):
             start_time = time.time()
             driver.get(target)
             end_time = time.time()
-            time.sleep(3)
+
+            time.sleep(5)
+            screenshot_path = '/home/dude/Desktop/Projects/CyberSecurity Project/Synthetic-Testing-Automation/STA_REST_API/screenshots/test_ss.png'
+            driver.save_screenshot(screenshot_path)
+
+            with open(screenshot_path, 'rb') as img:
+                screenshot_encoded = base64.b64encode(img.read()).decode()
 
             errors_list = []
 
-            
+
             logs = driver.get_log('browser')
             for entry in logs:
                 if entry['level'] == 'SEVERE':
@@ -171,14 +177,15 @@ class WebsiteTest(APIView):
                     errors_list.append(entry)
                     # print(entry)
             
-
             separated_urls = self.separate_urls(errors_list)
             print(separated_urls)
             driver.close()
             print(f"Load Time ----> {end_time - start_time}")
             return {
+                "stataus": "Successful Test",
                 "run_time":round(end_time - start_time, 2),
-                "errors":errors_list
+                "errors":errors_list,
+                "screenshot_encoded":screenshot_encoded
                 }
         except Exception as err:
             print(err)
@@ -202,7 +209,7 @@ class WebsiteTest(APIView):
                 test_results = self.website_test(target=target_url)
                 if test_results is None:
                     return Response({'error': "Invalid Url"}, status=400)
-                return Response({"results": test_results}, status=200)
+                return Response(test_results, status=200)
         except Exception as err:
             print(err)
             return Response({'error':'Error with request'},status=500)

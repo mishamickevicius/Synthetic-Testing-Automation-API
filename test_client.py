@@ -3,17 +3,17 @@ import base64
 
 # Get Test
 
-# URL = "http://127.0.0.1:8000/api/main-website-test"
-URL = "http://127.0.0.1:8000/api/test-group-view?test_group_name=Test Group 2&user_id=testUser2"
+URL = "http://127.0.0.1:8000/api/main-website-test"
+# URL = "http://127.0.0.1:8000/api/test-group-view?test_group_name=Test Group 2&user_id=testUser2"
 
-data = {
-    "user_id": "testUser2",
-    "test_group_name":"Test Group 2"
-}
+# data = {
+#     "user_id": "testUser2",
+#     "test_group_name":"Test Group 2"
+# }
 
-response = rq.get(URL)
+# response = rq.get(URL)
 
-print(response.json())
+# print(response.json())
 
 # # Delete Test
 
@@ -28,18 +28,29 @@ print(response.json())
 
 # Post Test
 
-# data = {
-#     "user_id":"testUser1",
-#     "test_type":"single",
-#     "target_url":"https://youtube.com"
-# }
-# # with open("/home/dude/Desktop/Projects/CyberSecurity Project/Synthetic-Testing-Automation/url_test_list.txt", 'rb') as file:
-# #     file_content = file.read()  # Read the file content as bytes
-# #     data["file"] = base64.b64encode(file_content).decode('utf-8')
+data = {
+    "user_id":"testUser1",
+    "test_type":"single",
+    "target_url":"https://youtube.com"
+}
+# with open("/home/dude/Desktop/Projects/CyberSecurity Project/Synthetic-Testing-Automation/url_test_list.txt", 'rb') as file:
+#     file_content = file.read()  # Read the file content as bytes
+#     data["file"] = base64.b64encode(file_content).decode('utf-8')
 
-# response = rq.post(URL, data=data)
-# print("Post data: ", response.json())
-# print("Post Response Code : ", response.status_code)
+response = rq.post(URL, data=data)
+response_data = response.json()
+
+print(response_data['run_time'])
+print(response_data['errors'])
+
+image_bytes = base64.b64decode(response_data['screenshot_encoded'])
+
+with open("test_ss_saved.png", "wb") as img:
+    img.write(image_bytes)
+
+print("Image Saved")
+
+print("Post Response Code : ", response.status_code)
 
 # Patch Test
 

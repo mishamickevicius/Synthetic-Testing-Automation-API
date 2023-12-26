@@ -1,0 +1,2 @@
+find a way to add the image to the db(Probably through the encoded string)
+
