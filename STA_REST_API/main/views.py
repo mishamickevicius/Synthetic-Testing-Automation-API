@@ -1,16 +1,19 @@
 from .models import TestGroupModel, TestResultModel
 from .serializers import TestGroupSerializer, TestResultSerializer
 
+import base64
+import time
+import re
+
 from django.contrib.auth.models import User, Group
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.request import Request
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
-import base64
-import time
 
 # Create your views here.
 class UserView(APIView):
@@ -19,12 +22,14 @@ class UserView(APIView):
     getting info about user(GET), making a new user(POST), and 
     deleting the current logged in user (DELETE).
     """
-    def get(self, request):
+    def get(self, request: Request):
         # Gets the Test Groups and Previous Tests that corresponds to the user in the DB
         try:
-            data = dict(request.data)
+            # data = dict(request.data)
             # The user ID from Firebase /// Will be the username in django
-            user_id = data['user_id'] if isinstance(data['user_id'], str) else data['user_id'][0] 
+            user_id = request.query_params.get('user_id', None)
+            if user_id is None:
+                return Response({'error': 'Missing parameters'}, status=400)
             user = User.objects.get(username=user_id)
             groups = list(TestGroupModel.objects.filter(user=user)) # Get the test group of this user
             ran_tests = []
@@ -85,13 +90,17 @@ class WebsiteTest(APIView):
     Deleting a past scan(DELETE)
     """
 
-    def get(self, request):
+    def get(self, request: Request):
         try:
-            data = dict(request.data)
-            user_id = data['user_id'] if isinstance(data['user_id'], str) else data['user_id'][0] 
-            user = User.objects.get(username=user_id)
-            test_group_name = data['test_group_name'] if isinstance(data['test_group_name'], str) else data['test_group_name'][0] 
+            # data = dict(request.data)
+            user_id = request.query_params.get('user_id', None)
+            test_group_name = request.query_params.get('test_group_name', None) 
+
+            if test_group_name is None or user_id is None:
+                return Response({'error': 'Missing parameters'}, status=400)
+            
             test_group = TestGroupModel.objects.filter(name=test_group_name, user=user).first()
+            user = User.objects.get(username=user_id)
             if test_group is None:
                 return Response({'error': f'No test group with name {test_group_name}'}, status=400)
             else:
@@ -128,6 +137,20 @@ class WebsiteTest(APIView):
             return Response({'error':'Error with request'},status=500)
 
 
+    def separate_urls(self, errors:list):
+        url_regex = r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+\.com(/.*)'
+        matches = []
+
+        for error in errors:
+            e = error['message']
+            finds = re.findall(url_regex, e)
+            for found_url in finds:
+                # Replace the found URL with an empty string to get the string without the URL
+                modified_string = re.sub(found_url, '', e)
+                matches.append((found_url, modified_string.strip()))  # Strip removes any leading/trailing whitespace
+        
+        return matches
+
     def website_test(self, target):
         # * Return the results as a json object
         try:
@@ -136,19 +159,27 @@ class WebsiteTest(APIView):
             driver.get(target)
             end_time = time.time()
             time.sleep(3)
-            errors = driver.execute_script("return window.console.error")
+
             errors_list = []
-            if errors:
-                print("Console errors found:")
-                for error in errors:
-                    print(error)
-                    errors_list.append(str(error))
-            else:
-                print("No errors found")
-            time.sleep(2)
+
+            
+            logs = driver.get_log('browser')
+            for entry in logs:
+                if entry['level'] == 'SEVERE':
+                    entry.pop('timestamp')
+                    entry.pop('level')
+                    errors_list.append(entry)
+                    # print(entry)
+            
+
+            separated_urls = self.separate_urls(errors_list)
+            print(separated_urls)
             driver.close()
             print(f"Load Time ----> {end_time - start_time}")
-            return round(end_time - start_time, 2)
+            return {
+                "run_time":round(end_time - start_time, 2),
+                "errors":errors_list
+                }
         except Exception as err:
             print(err)
             return None
@@ -171,7 +202,7 @@ class WebsiteTest(APIView):
                 test_results = self.website_test(target=target_url)
                 if test_results is None:
                     return Response({'error': "Invalid Url"}, status=400)
-                return Response({"load_time": test_results}, status=200)
+                return Response({"results": test_results}, status=200)
         except Exception as err:
             print(err)
             return Response({'error':'Error with request'},status=500)
@@ -184,11 +215,15 @@ class TestGroupView(APIView):
     by users. This will include getting info about a test group(GET), 
     adding new groups(POST), deleting groups(DELETE), and changing groups(PATCH)
     """
-    def get(self, request):
+    def get(self, request: Request):
         try:
-            data = dict(request.data)
-            group_name = data['test_group_name'] if isinstance(data['test_group_name'], str) else data['test_group_name'][0] 
-            user_id = data['user_id'] if isinstance(data['user_id'], str) else data['user_id'][0] 
+            # data = dict(request.data)
+            group_name = request.query_params.get('test_group_name', None)
+            user_id = request.query_params.get('user_id', None)
+            
+            if group_name is None or user_id is None:
+                return Response({'error': 'Missing parameters'}, status=400)
+            
             user = User.objects.get(username=user_id)
             test_group = TestGroupModel.objects.filter(user=user, name=group_name).first() 
             serializer = TestGroupSerializer(test_group)
