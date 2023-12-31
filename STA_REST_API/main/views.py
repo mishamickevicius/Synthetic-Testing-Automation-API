@@ -4,6 +4,8 @@ from .serializers import TestGroupSerializer, TestResultSerializer
 import base64
 import time
 import re
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 from django.contrib.auth.models import User, Group
 
@@ -137,21 +139,29 @@ class WebsiteTest(APIView):
             return Response({'error':'Error with request'},status=500)
 
 
-    def separate_urls(self, errors:list):
-        url_regex = r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+\.com(/.*)'
+    def separate_urls(self, errors):
+        url_regex = r'https?://[\w\-./?&=_~:#%]+'
         matches = []
 
         for error in errors:
             e = error['message']
-            finds = re.findall(url_regex, e)
-            for found_url in finds:
-                # Replace the found URL with an empty string to get the string without the URL
-                modified_string = re.sub(found_url, '', e)
-                matches.append((found_url, modified_string.strip()))  # Strip removes any leading/trailing whitespace
-        
+            found_urls = re.findall(url_regex, e)
+            
+            # If there are multiple URLs found in the error message
+            if len(found_urls) >= 2:
+                modified_string = e
+                for found_url in found_urls:
+                    modified_string = modified_string.replace(found_url, '')
+
+                matches.append((found_urls, modified_string.strip()))  # Strip removes any leading/trailing whitespace
+            else:
+                modified_string = e.replace(found_urls[0], '')
+                matches.append((found_urls[0], modified_string.strip()))
+
+
         return matches
 
-    def website_test(self, target):
+    def website_test(self, target, **kwargs):
         # * Return the results as a json object
         try:
             driver = webdriver.Chrome()
@@ -178,13 +188,26 @@ class WebsiteTest(APIView):
                     # print(entry)
             
             separated_urls = self.separate_urls(errors_list)
-            print(separated_urls)
+            errors_response = []
+            for url, message in separated_urls:
+                errors_response.append({"Url": url, "Message": message})
+            # print(errors_response)
             driver.close()
-            print(f"Load Time ----> {end_time - start_time}")
+            # print(f"Load Time ----> {end_time - start_time}")
+
+            # Save Test to DB
+            test = TestResultModel(website_url=target, 
+                                   user=kwargs['user'], 
+                                   test_group=kwargs['test_group'],
+                                   run_time=round((end_time - start_time), 2), 
+                                   errors=errors_response, 
+                                   run_date=datetime.now())
+            test.save()
+
             return {
-                "stataus": "Successful Test",
+                "status": "Successful Test",
                 "run_time":round(end_time - start_time, 2),
-                "errors":errors_list,
+                "errors":errors_response,
                 "screenshot_encoded":screenshot_encoded
                 }
         except Exception as err:
@@ -199,14 +222,23 @@ class WebsiteTest(APIView):
             user = User.objects.get(username=user_id)
             test_type = data['test_type'] if isinstance(data['test_type'], str) else data['test_type'][0] 
             if test_type == 'group':
-                group_name = data['group_name']
+                group_name = data['group_name'] if isinstance(data['group_name'], str) else data['group_name'][0] 
                 group = TestGroupModel.objects.filter(name=group_name, user=user).first()
                 if group is None:
                     return Response({'error': f'No test group with name {group_name}'}, status=400)  
-                ## !!! This is where we loop through URLS and run test function through threads
+                ##  This is where we loop through URLS and run test function through threads
+                urls = group.file_data
+                threaded_func = lambda u: self.website_test(u, user=user, test_group=group)
+                with ThreadPoolExecutor(max_workers=20) as executor:
+                    # Run tests concurrently and store the results in a dictionary
+                    tests_results = {url: executor.submit(self.website_test, url, user=user, test_group=group) for url in urls}
+                    # Collect the results from each test
+                    results = {url: future.result() for url, future in tests_results.items()}  
+
+                return Response(results, status=200)                  
             elif test_type == 'single':
                 target_url = data['target_url'] if isinstance(data['target_url'], str) else data['target_url'][0] 
-                test_results = self.website_test(target=target_url)
+                test_results = self.website_test(target=target_url, user=user, test_group=None)
                 if test_results is None:
                     return Response({'error': "Invalid Url"}, status=400)
                 return Response(test_results, status=200)

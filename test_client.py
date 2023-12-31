@@ -11,7 +11,7 @@ URL = "http://127.0.0.1:8000/api/main-website-test"
 #     "test_group_name":"Test Group 2"
 # }
 
-# response = rq.get(URL)
+# response = rq.get(URL + "?user_id=testUser1&test")
 
 # print(response.json())
 
@@ -29,9 +29,9 @@ URL = "http://127.0.0.1:8000/api/main-website-test"
 # Post Test
 
 data = {
-    "user_id":"testUser1",
-    "test_type":"single",
-    "target_url":"https://youtube.com"
+    "user_id":"testUser2",
+    "test_type":"group",
+    "group_name":"Test Group 2"
 }
 # with open("/home/dude/Desktop/Projects/CyberSecurity Project/Synthetic-Testing-Automation/url_test_list.txt", 'rb') as file:
 #     file_content = file.read()  # Read the file content as bytes
@@ -40,13 +40,26 @@ data = {
 response = rq.post(URL, data=data)
 response_data = response.json()
 
-print(response_data['run_time'])
-print(response_data['errors'])
+count = 1
 
-image_bytes = base64.b64decode(response_data['screenshot_encoded'])
+for url in list(response_data.keys()):
+    if response_data[url] is None:
+        continue
+    else: 
+        try:
+            image_bytes = base64.b64decode(response_data[url].pop('screenshot_encoded'))
+            with open(f"website_screenshot_{count}.png", "wb") as img:
+                img.write(image_bytes)
+            count += 1
+        except KeyError:
+            print("Key Error Happened")
 
-with open("test_ss_saved.png", "wb") as img:
-    img.write(image_bytes)
+
+
+print(response_data)
+
+
+
 
 print("Image Saved")
 
