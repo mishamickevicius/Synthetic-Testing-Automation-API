@@ -276,7 +276,7 @@ class TestGroupView(APIView):
             data = dict(request.data)
             user_id = data['user_id'] if isinstance(data['user_id'], str) else data['user_id'][0] 
             user = User.objects.get(username=user_id)
-            group_name = data['name'] if isinstance(data['name'], str) else data['name'][0] 
+            group_name = data['group_name'] if isinstance(data['group_name'], str) else data['group_name'][0] 
             # Check if the name already is used
             check = TestGroupModel.objects.filter(name=group_name, user=user).first()
             if check is not None:
