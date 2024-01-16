@@ -16,8 +16,11 @@ pip install -r requirements.txt
 Step 4: Run Server
 ```
 cd STA_REST_API
+python3 manage.py makemigrations
+python3 manage.py migrate
 python3 manage.py runserver 
 ```
 Step 5: Test Server
 ```
+
 ```
